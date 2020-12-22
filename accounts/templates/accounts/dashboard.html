@@ -16,7 +16,14 @@
 				<tr>
 					<th></th>
 					<th>Customer</th>
-					<th>Orders</th>
+					<th>Phone_no</th>
+					{% for i in cus_lis %}
+						<tr>
+							<td><a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'customer' i.id %}">view</a></td>
+							<td>{{i.name}}</td>
+							<td>{{i.phone_no}}</td>
+						</tr>
+					{% endfor %}
 				</tr>
 
 			</table>
@@ -27,7 +34,7 @@
 		<h5>LAST 5 ORDERS</h5>
 		<hr>
 		<div class="card card-body">
-			<a class="btn btn-primary  btn-sm btn-block" href="">Create Order</a>
+			<a class="btn btn-primary  btn-sm btn-block" href="{% url 'create_order' %}">Create Order</a>
 			<table class="table table-sm">
 				<tr>
 					<th>Product</th>
@@ -35,7 +42,17 @@
 					<th>Status</th>
 					<th>Update</th>
 					<th>Remove</th>
+					{% for i in order_lis %}
+						<tr>
+							<td>{{i.product}}</td>
+							<td>{{i.date_created}}</td>
+							<td>{{i.status}}</td>
+							<td><a class="btn btn-outline-info  btn-sm btn-block" href="{% url 'update_order' i.id %}">Update</a></td>
+							<td><a class="btn btn-outline-danger  btn-sm btn-block" href="{% url 'delete_order' i.id %}">Delete</a></td>
+						</tr>
+					{% endfor %}
 				</tr>
+
 		
 			</table>
 		</div>
