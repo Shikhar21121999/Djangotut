@@ -8,9 +8,12 @@
     <div class="col-md-6">
         <div class="card card-body">
             <form action="" method="POST">
-                <p>{{order.product}}</p>
                 {% csrf_token %}
+                {{ formset.management_form }}
+                {% for form in formset %}
                     {{form}}
+                    <hr>
+                {% endfor %}
                 <input class="btn btn-primary" type="submit" name="submit" >
             </form>
         </div>

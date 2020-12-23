@@ -11,7 +11,7 @@
                 {% csrf_token %}
                 <p>do you really wanna delete order of product {{order.product}} ordered by customer {{order.customer}}?</p>
                 <a class="btn btn-warning " href="{{'home'}}">cancel</a>
-                <input class="btn btn-danger"  type="submit" name="ConfirmDelete" >
+                <input class="btn btn-danger"  type="submit" value="ConfirmDelete" >
             </form>
         </div>
     </div>
