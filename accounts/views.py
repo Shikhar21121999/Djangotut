@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
 from django.forms import inlineformset_factory
 from .models import *
-from .forms import OrderForm
+from .forms import OrderForm, CreateUserForm
 from .filters import *
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 # Create your views here.
 
 # here we create function which will be called through urls file
@@ -73,3 +75,27 @@ def delete_order(request, order_id):
         order.delete()
         return redirect('home')
     return render(request, 'accounts/delete_order.html', {'order': order})
+
+
+def register(request):
+    form = CreateUserForm()
+
+    if request.method == 'POST':
+        print("submitting form")
+        form = CreateUserForm(request.POST)
+        if form.is_valid():
+            print("form is valid")
+            form.save()
+            new_user = form.cleaned_data.get('username')
+            # messages.success(request, 'Profile details updated.')
+            messages.success(
+                request, 'Account was created successfully for user '+new_user)
+            return redirect('login')
+    context = {
+        'form': form,
+    }
+    return render(request, 'accounts/register.html', context)
+
+
+def login(request):
+    return render(request, 'accounts/login.html')
