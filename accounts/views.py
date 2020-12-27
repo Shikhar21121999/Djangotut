@@ -5,11 +5,15 @@ from .forms import OrderForm, CreateUserForm
 from .filters import *
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 # here we create function which will be called through urls file
 
 
+@login_required(login_url='login')
 def home(request):
     customer_lis = Customer.objects.all()
     order_lis = Order.objects.all()
@@ -23,6 +27,7 @@ def home(request):
                   )
 
 
+@login_required(login_url='login')
 def customers(request, cus_id):
     customer = Customer.objects.get(id=cus_id)
     order_lis = Order.objects.filter(customer=customer)
@@ -34,6 +39,7 @@ def customers(request, cus_id):
     return render(request, 'accounts/customers.html', context)
 
 
+@login_required(login_url='login')
 def products(request):
     product_lis = Products.objects.all()
     return render(request, 'accounts/products.html', {'prod_lis': product_lis})
@@ -78,24 +84,55 @@ def delete_order(request, order_id):
 
 
 def register(request):
-    form = CreateUserForm()
 
-    if request.method == 'POST':
-        print("submitting form")
-        form = CreateUserForm(request.POST)
-        if form.is_valid():
-            print("form is valid")
-            form.save()
-            new_user = form.cleaned_data.get('username')
-            # messages.success(request, 'Profile details updated.')
-            messages.success(
-                request, 'Account was created successfully for user '+new_user)
-            return redirect('login')
-    context = {
-        'form': form,
-    }
-    return render(request, 'accounts/register.html', context)
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    else:
+        form = CreateUserForm()
+
+        if request.method == 'POST':
+            print("submitting form")
+            form = CreateUserForm(request.POST)
+            if form.is_valid():
+                print("form is valid")
+                form.save()
+                new_user = form.cleaned_data.get('username')
+                # messages.success(request, 'Profile details updated.')
+                messages.success(
+                    request, 'Account was created successfully for user '+new_user)
+                return redirect('login')
+        context = {
+            'form': form,
+        }
+        return render(request, 'accounts/register.html', context)
 
 
-def login(request):
-    return render(request, 'accounts/login.html')
+def user_login(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+
+    else:
+        if request.method == 'POST':
+            # get the username and password
+            # authenticate user with passowrd and log it in
+            username = request.POST.get('username')
+            password = request.POST.get('password')
+            user = authenticate(request, username=username, password=password)
+            print(user)
+            if user is not None:
+                login(request, user)
+                return redirect('home')
+            else:
+                print('login failed for user: ', username, password)
+                messages.info(request, 'username or passowrd is incorrect')
+                return redirect('login')
+
+        return render(request, 'accounts/login.html')
+
+
+def user_logout(request):
+    print("logging out ", request.user.username)
+    user_logged_out = request.user.username
+    logout(request)
+    return HttpResponse('<p>{{user_logged_out}} sucessfully loged out</p>')
