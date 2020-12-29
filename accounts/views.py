@@ -9,6 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
 from .decorators import unauthenticated_user, allowed_user_group
+from django.contrib.auth.models import Group
 # Create your views here.
 
 # here we create function which will be called through urls file
@@ -28,26 +29,46 @@ def home(request):
     order_delivered = order_lis.filter(status="Delivered").count()
     order_pending = order_lis.filter(status="Pending").count()
 
-    return render(request, 'accounts/dashboard.html',
-                  {'cus_lis': customer_lis, 'order_lis': order_lis,
-                   'order_delivered': order_delivered, 'order_pending': order_pending,
-                   'total_order': total_order}
-                  )
+    context = {'cus_lis': customer_lis,
+               'order_lis': order_lis,
+               'order_delivered': order_delivered, 'order_pending': order_pending,
+               'total_order': total_order}
 
-
-def user_home(request):
-    '''
-    dashboard view for a normal user
-    belonging to group customer
-    '''
-    return render(request, 'accounts/user.html')
+    return render(request, 'accounts/dashboard.html', context)
 
 
 @login_required(login_url='login')
+@allowed_user_group(allowed_roles=['customer'])
+def user_home(request):
+    '''
+    dashboard view for a customer user
+    belonging to group customer
+    '''
+
+    # getting orders for current user using customer relation
+    orders = request.user.customer.order_set.all()
+    total_order = orders.count()
+
+    order_delivered = orders.filter(status="Delivered").count()
+    order_pending = orders.filter(status="Pending").count()
+
+    context = {
+        'orders': orders,
+        'order_delivered': order_delivered,
+        'order_pending': order_pending,
+        'total_order': total_order
+
+    }
+
+    return render(request, 'accounts/user.html', context)
+
+
+@login_required(login_url='login')
+@allowed_user_group(allowed_roles=['admin'])
 def customers(request, cus_id):
     '''
     customer view showing order information about a particular user
-    acessible only to a logged in user
+    acessible only to a logged in user who is a member of admin group
     '''
 
     customer = Customer.objects.get(id=cus_id)
@@ -73,6 +94,8 @@ def products(request):
     return render(request, 'accounts/products.html', {'prod_lis': product_lis})
 
 
+@login_required(login_url='login')
+@allowed_user_group(allowed_roles=['customer'])
 def create_order(request, cus_id):
     '''
     a form view used to create a new order
@@ -97,6 +120,8 @@ def create_order(request, cus_id):
     return render(request, 'accounts/order_formset.html', context)
 
 
+@login_required(login_url='login')
+@allowed_user_group(allowed_roles=['customer'])
 def update_order(request, order_id):
     '''
     a form view used to update an order
@@ -117,6 +142,8 @@ def update_order(request, order_id):
     return render(request, 'accounts/order_form.html', context)
 
 
+@login_required(login_url='login')
+@allowed_user_group(allowed_roles=['customer'])
 def delete_order(request, order_id):
     '''
     view method to confirm deletion of an order
@@ -138,6 +165,7 @@ def register(request):
     '''
     view method to register a new user
     initially it adds a new user to customer group
+    view function acessible only to unauthenticated_user
     '''
 
     form = CreateUserForm()
@@ -153,8 +181,11 @@ def register(request):
             user_name = form.cleaned_data.get('username')
 
             # add new_user to group customer
-            group.object.get(name='customer')
+            group = Group.objects.get(name='customer')
             new_user.groups.add(group)
+
+            # create a new customer which has relation to current_user
+            Customer.objects.create(user=new_user)
 
             # messages.success(request, 'Profile details updated.')
             messages.success(
@@ -173,7 +204,7 @@ def user_login(request):
     '''
     view to log in and authenticate a user in
     user is redirected to dashboard if belonging to admin group
-    if belonging to customer group redirect it to 'user'
+    view function acessible only to unauthenticated_user
     '''
 
     if request.method == 'POST':

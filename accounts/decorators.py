@@ -3,6 +3,12 @@ from django.shortcuts import redirect
 
 
 def unauthenticated_user(view_func):
+    '''
+    A decorator for view function
+    It add functionality that view function only vissible
+    if user is not authenticated.
+    Used to restrict acess to register and login page for authenticated user
+    '''
     def wrapper(request, *args, **kwargs):
         if request.user.is_authenticated:
             return redirect('home')
