@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.forms import inlineformset_factory
 from .models import *
-from .forms import OrderForm, CreateUserForm
+from .forms import OrderForm, CreateUserForm, CustomerForm
 from .filters import *
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
@@ -180,13 +180,6 @@ def register(request):
             new_user = form.save()  # returns the user object
             user_name = form.cleaned_data.get('username')
 
-            # add new_user to group customer
-            group = Group.objects.get(name='customer')
-            new_user.groups.add(group)
-
-            # create a new customer which has relation to current_user
-            Customer.objects.create(user=new_user)
-
             # messages.success(request, 'Profile details updated.')
             messages.success(
                 request, 'Account was created successfully for user '
@@ -248,3 +241,29 @@ def user_logout(request):
     messages.success(
         request, 'user sucessfully logged out')
     return redirect('login')
+
+
+@login_required(login_url='login')
+@allowed_user_group(allowed_roles=['customer'])
+def user_settings(request):
+    '''
+    view method to change and view user settings
+    it has to be restricted to unauthenticated user
+    '''
+    form = CustomerForm(instance=request.user.customer)
+
+    if request.method == 'POST':
+
+        form = CustomerForm(request.POST, request.FILES,
+                            instance=request.user.customer)
+
+        if form.is_valid():
+            form.save()
+            messages.info(request, 'profile settings update sucessfully')
+            return redirect('user')
+        else:
+            print("not valid")
+
+    context = {'form': form}
+
+    return render(request, 'accounts/user_settings.html', context)

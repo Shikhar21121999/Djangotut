@@ -3,6 +3,11 @@
 {% block content %}
 
 {% include 'accounts/status.html' %}
+{% for message in messages %}
+	<div class="alert alert-success" role="alert">
+		{{message}}
+	</div>
+{% endfor %}
 
 <div class="row">
 	<div class="col-md">

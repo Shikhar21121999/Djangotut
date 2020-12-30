@@ -8,43 +8,35 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import auth
 
 
+class CustomerForm(ModelForm):
+    '''
+    class to create a form for customer
+    which will be used to update changes in the
+    customer settings
+    '''
+    class Meta:
+        model = Customer
+        fields = '__all__'
+        exclude = ['user']
+
+
 class OrderForm(ModelForm):
+    '''
+    class to  create a form for order placed by customer
+    '''
     class Meta:
         model = Order
         fields = ['status']
 
 
 class CreateUserForm(UserCreationForm):
+    '''
+    class to create a form for django model user
+    '''
     class Meta:
-        password1 = forms.CharField(max_length=16, widget=forms.PasswordInput(
-            attrs={'class': 'form-control', 'placeholder': 'Password from numbers and letters of the Latin alphabet'}))
-        password2 = forms.CharField(max_length=16, widget=forms.PasswordInput(
-            attrs={'class': 'form-control', 'placeholder': 'Password confirm'}))
         model = User
         fields = ['username', 'email', 'password1', 'password2']
         widgets = {
             'username': forms.fields.TextInput(attrs={'placeholder': 'Username..'}),
             'email': forms.fields.TextInput(attrs={'placeholder': 'Email..'}),
         }
-
-# class CreateUserForm(UserCreationForm):
-#     first_name = forms.CharField(label="First name", widget=forms.TextInput(
-#         attrs={'placeholder': "First name"}))
-#     email = forms.EmailField(label="Email", widget=forms.TextInput(
-#         attrs={'placeholder': "Email"}))
-
-#     class Meta(UserCreationForm.Meta):
-#         model = auth.get_user_model()
-#         fields = [
-#             'first_name',
-#             'email',
-#             'password1',
-#             'password2'
-#         ]
-
-#     def __init__(self, *args, **kwargs):
-#         super(InviteRegistrationForm, self).__init__(*args, **kwargs)
-#         self.fields['password1'].widget = forms.PasswordInput(
-#             attrs={'placeholder': "Password"})
-#         self.fields['password2'].widget = forms.PasswordInput(
-#             attrs={'placeholder': "Password"})
