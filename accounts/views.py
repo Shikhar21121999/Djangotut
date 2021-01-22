@@ -96,7 +96,24 @@ def products(request):
 
 @login_required(login_url='login')
 @allowed_user_group(allowed_roles=['customer'])
-def create_order(request, cus_id):
+def all_order(request):
+    '''
+    view function to display all orders of a customer
+    '''
+    print("inside order_all")
+    # get the curr_customer
+    curr_cus = request.user.customer
+    print(curr_cus)
+    # get orders for the current customer
+    orderlis = Order.objects.filter(customer=curr_cus)
+    print(orderlis)
+    context = {'orderlis': orderlis}
+    return render(request, 'accounts/order_all.html', context)
+
+
+@login_required(login_url='login')
+@allowed_user_group(allowed_roles=['customer'])
+def create_order(request):
     '''
     a form view used to create a new order
     it uses inlineformset_factory to create a form with multiple forms
@@ -104,7 +121,7 @@ def create_order(request, cus_id):
     OrderFormset = inlineformset_factory(
         Customer, Order, fields=('product', 'status'), extra=5)
 
-    customer = Customer.objects.get(id=cus_id)
+    customer = request.user.customer
     formset = OrderFormset(queryset=Order.objects.none(), instance=customer)
 
     if request.method == 'POST':
@@ -244,14 +261,15 @@ def user_logout(request):
 
 
 @login_required(login_url='login')
-@allowed_user_group(allowed_roles=['customer'])
+@allowed_user_group(allowed_roles=['customer', ])
 def user_settings(request):
     '''
     view method to change and view user settings
     it has to be restricted to unauthenticated user
     '''
-    form = CustomerForm(instance=request.user.customer)
+    # if current user is an admin then redirect him to django/admin/settings
 
+    form = CustomerForm(instance=request.user.customer)
     if request.method == 'POST':
 
         form = CustomerForm(request.POST, request.FILES,
